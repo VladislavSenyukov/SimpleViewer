@@ -83,8 +83,9 @@ class SVCollectionView: NSCollectionView {
                     CGContextSetLineWidth(context, 3)
                     NSColor(red: 150/255, green: 200/255, blue: 55/255, alpha: 1).setStroke()
                     let offset = CGFloat(10)
-                    CGContextMoveToPoint(context, x, dirtyRect.minY+offset)
-                    let mixY = dirtyRect.maxY-offset
+                    let rect = frame
+                    CGContextMoveToPoint(context, x, rect.minY+offset)
+                    let mixY = rect.maxY-offset
                     CGContextAddLineToPoint(context, x, mixY)
                     CGContextStrokePath(context)
             }
