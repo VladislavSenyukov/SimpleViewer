@@ -88,7 +88,6 @@ class SVCollectionView: NSCollectionView {
         if let color = layer?.backgroundColor {
             NSColor(cgColor: color)?.set()
         }
-        
         NSRectFill(dirtyRect)
         if var indexPath = dragInsertionIndexPath {
             func drawSeparator(_ x: CGFloat) {
@@ -122,6 +121,13 @@ class SVCollectionView: NSCollectionView {
     }
     
     private func doesPasteboardHaveImages(_ info: NSDraggingInfo) -> Bool {
+        info.enumerateDraggingItems(options: .concurrent, for: self, classes: [NSURL.self], searchOptions: [NSPasteboardURLReadingFileURLsOnlyKey : true]) { (item, idx, stop) in
+            if let url = item.item as? NSURL {
+                Swift.print(url)
+            }
+        }
+
+        
         let pasteboard = info.draggingPasteboard()
         return pasteboard.canReadObject(forClasses: [NSURL.self], options: imageFilterOptions)
     }

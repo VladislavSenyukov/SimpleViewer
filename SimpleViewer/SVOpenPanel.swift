@@ -19,9 +19,6 @@ class SVOpenPanel {
         panel.allowedFileTypes = [kUTTypeImage as String]
         panel.message = "Choose images or a directory to open"
         panel.prompt = "Choose"
-        let desktopDirectory = NSSearchPathForDirectoriesInDomains(.desktopDirectory, .userDomainMask, true).first!
-        panel.directoryURL = URL(string: desktopDirectory)
-        
         panel.begin {[unowned panel] (succes) in
             if succes == 1 {
                 completion(panel.urls)

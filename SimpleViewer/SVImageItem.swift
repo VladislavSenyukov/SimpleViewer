@@ -30,7 +30,7 @@ class SVImageItem: NSObject {
     }
     
     func loadImageFile() {
-        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default).async {
+        DispatchQueue.global().async {
             if let image = NSImage(contentsOf: self.url) {
                 let imageRef = image.cgImage
                 DispatchQueue.main.async(execute: {

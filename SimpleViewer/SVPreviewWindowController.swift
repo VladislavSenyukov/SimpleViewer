@@ -33,7 +33,8 @@ class SVPreviewWindowController: NSWindowController {
         datasource.addObserver(self, forKeyPath: datasource.itemsKey, options: .new, context: nil)
         collectionView.register(NSNib(nibNamed: SVImageCollectionCell.nibName, bundle: nil), forItemWithIdentifier: SVImageCollectionCell.nibName)
         collectionView.register(forDraggedTypes: [NSURLPboardType])
-//        collectionView.setDraggingSourceOperationMask(.every, forLocal: false)
+        collectionView.wantsLayer = true
+        collectionView.layer?.backgroundColor = .white
     }
     
     func appendImageFiles(_ urls: [URL]) {
@@ -103,7 +104,7 @@ extension SVPreviewWindowController : SVCollectionViewDelegate {
     
     // MARK: Drag&Drop from the outside of the app
     
-    func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<IndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionViewDropOperation>) -> NSDragOperation {
+    private func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<IndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionViewDropOperation>) -> NSDragOperation {
         return .copy
     }
     

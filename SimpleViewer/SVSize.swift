@@ -12,7 +12,7 @@ extension NSSize {
     
     func fittingSizeForHeight(_ height: CGFloat) -> NSSize {
         let ratio = height / self.height
-        let size = NSSize(width: self.width * ratio, height: height)
+        let size = NSSize(width: round(self.width * ratio), height: height)
         return size
     }
 }
