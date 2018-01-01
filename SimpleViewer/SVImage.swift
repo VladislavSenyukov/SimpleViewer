@@ -9,9 +9,9 @@
 import AppKit
 
 extension NSImage {
-    var cgImage: CGImageRef {
-        let imageData = TIFFRepresentation!
-        let source = CGImageSourceCreateWithData(imageData, nil)!
+    var cgImage: CGImage {
+        let imageData = tiffRepresentation!
+        let source = CGImageSourceCreateWithData(imageData as CFData, nil)!
         let maskRef = CGImageSourceCreateImageAtIndex(source, 0, nil)!
         return maskRef
     }

@@ -9,8 +9,8 @@
 import Cocoa
 
 enum SVImageCollectionCellInsertionSide {
-    case Right
-    case Left
+    case right
+    case left
 }
 
 class SVImageCollectionCell: SVColoredView, SVNibNamable {
@@ -27,30 +27,30 @@ class SVImageCollectionCell: SVColoredView, SVNibNamable {
         }
     }
     
-    private var leftC: NSLayoutConstraint!
-    private var rightC: NSLayoutConstraint!
-    private var insertionSide = SVImageCollectionCellInsertionSide.Left
+    fileprivate var leftC: NSLayoutConstraint!
+    fileprivate var rightC: NSLayoutConstraint!
+    fileprivate var insertionSide = SVImageCollectionCellInsertionSide.left
     
     override func initialize() {
         super.initialize()
         translatesAutoresizingMaskIntoConstraints = false
         color = NSColor.randomColor()
         let borderColor = NSColor(red: 150/255, green: 200/255, blue: 55/255, alpha: 1)
-        layer?.borderColor = borderColor.CGColor
-        dimOverlayView.color = .blackColor()
+        layer?.borderColor = borderColor.cgColor
+        dimOverlayView.color = .black
         dimOverlayView.alphaValue = 0.2
     }
     
     func showBorder() {
         layer?.borderWidth = 4
-        dimOverlayView.hidden = false
-        deleteButton.hidden = false
+        dimOverlayView.isHidden = false
+        deleteButton.isHidden = false
 
     }
     
     func hideBorder() {
         layer?.borderWidth = 0
-        dimOverlayView.hidden = true
-        deleteButton.hidden = true
+        dimOverlayView.isHidden = true
+        deleteButton.isHidden = true
     }
 }

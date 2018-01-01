@@ -9,8 +9,8 @@
 import Cocoa
 
 protocol SVCollectionViewUpdatable {
-    func updateCollectionViewInsertion(indexPaths: Set<NSIndexPath>)
-    func updateCollectionViewRemoval(indexPaths: Set<NSIndexPath>)
+    func updateCollectionViewInsertion(_ indexPaths: Set<IndexPath>)
+    func updateCollectionViewRemoval(_ indexPaths: Set<IndexPath>)
 }
 
 protocol SVNibNamable {
@@ -19,10 +19,10 @@ protocol SVNibNamable {
 
 class SVPreviewWindowController: NSWindowController {
 
-    @IBOutlet private weak var collectionView: SVCollectionView!
-    @IBOutlet private weak var scrollView: NSScrollView!
+    @IBOutlet fileprivate weak var collectionView: SVCollectionView!
+    @IBOutlet fileprivate weak var scrollView: NSScrollView!
     
-    private lazy var datasource = SVImageDatasource()
+    fileprivate lazy var datasource = SVImageDatasource()
     
     convenience init() {
         self.init(windowNibName: "MainWindow")
@@ -30,13 +30,13 @@ class SVPreviewWindowController: NSWindowController {
     
     override func windowDidLoad() {
         super.windowDidLoad()
-        datasource.addObserver(self, forKeyPath: datasource.itemsKey, options: .New, context: nil)
-        collectionView.registerNib(NSNib(nibNamed: SVImageCollectionCell.nibName, bundle: nil), forItemWithIdentifier: SVImageCollectionCell.nibName)
-        collectionView.registerForDraggedTypes([NSFilenamesPboardType])
-        collectionView.setDraggingSourceOperationMask(.Every, forLocal: false)
+        datasource.addObserver(self, forKeyPath: datasource.itemsKey, options: .new, context: nil)
+        collectionView.register(NSNib(nibNamed: SVImageCollectionCell.nibName, bundle: nil), forItemWithIdentifier: SVImageCollectionCell.nibName)
+        collectionView.register(forDraggedTypes: [NSURLPboardType])
+//        collectionView.setDraggingSourceOperationMask(.every, forLocal: false)
     }
     
-    func appendImageFiles(urls: [NSURL]) {
+    func appendImageFiles(_ urls: [URL]) {
         datasource.appendImageURLs(urls)
     }
     
@@ -44,21 +44,21 @@ class SVPreviewWindowController: NSWindowController {
         datasource.clear()
     }
     
-    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         // observe handler to insert or remove items in our collection on datasource update
         if keyPath != nil && keyPath! == datasource.itemsKey && change != nil {
-            if let changeKindInt = change![NSKeyValueChangeKindKey] as? UInt {
+            if let changeKindInt = change![NSKeyValueChangeKey.kindKey] as? UInt {
                 if let kind = NSKeyValueChange(rawValue: changeKindInt) {
-                    if kind == .Insertion || kind == .Removal {
-                        if let indices = change![NSKeyValueChangeIndexesKey] as? NSIndexSet {
-                            let indexPathsArray = indices.map({ (idx) -> NSIndexPath in
-                                return NSIndexPath(forItem: idx, inSection: 0)
+                    if kind == .insertion || kind == .removal {
+                        if let indices = change![NSKeyValueChangeKey.indexesKey] as? IndexSet {
+                            let indexPathsArray = indices.map({ (idx) -> IndexPath in
+                                return IndexPath(item: idx, section: 0)
                             })
-                            let indexPaths = Set<NSIndexPath>(indexPathsArray)
+                            let indexPaths = Set<IndexPath>(indexPathsArray)
                             switch kind {
-                            case .Insertion:
+                            case .insertion:
                                 updateCollectionViewInsertion(indexPaths)
-                            case .Removal:
+                            case .removal:
                                 updateCollectionViewRemoval(indexPaths)
                             default:
                                 break
@@ -72,14 +72,14 @@ class SVPreviewWindowController: NSWindowController {
 }
 
 extension SVPreviewWindowController : SVCollectionViewUpdatable {
-    func updateCollectionViewInsertion(indexPaths: Set<NSIndexPath>) {
-        NSAnimationContext.currentContext().duration = 0.25
-        collectionView.animator().insertItemsAtIndexPaths(indexPaths)
+    func updateCollectionViewInsertion(_ indexPaths: Set<IndexPath>) {
+        NSAnimationContext.current().duration = 0.25
+        collectionView.animator().insertItems(at: indexPaths)
     }
     
-    func updateCollectionViewRemoval(indexPaths: Set<NSIndexPath>) {
-        NSAnimationContext.currentContext().duration = 0.25
-        collectionView.animator().deleteItemsAtIndexPaths(indexPaths)
+    func updateCollectionViewRemoval(_ indexPaths: Set<IndexPath>) {
+        NSAnimationContext.current().duration = 0.25
+        collectionView.animator().deleteItems(at: indexPaths)
     }
 }
 
@@ -87,11 +87,11 @@ extension SVPreviewWindowController : NSCollectionViewDataSource {
     
     //MARK: Collection Datasource
     
-    func collectionView(collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
         return datasource.count
     }
-    func collectionView(collectionView: NSCollectionView, itemForRepresentedObjectAtIndexPath indexPath: NSIndexPath) -> NSCollectionViewItem {
-        let item = collectionView.makeItemWithIdentifier(SVImageCollectionCell.nibName, forIndexPath: indexPath) as! SVImageSlideItem
+    func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
+        let item = collectionView.makeItem(withIdentifier: SVImageCollectionCell.nibName, for: indexPath) as! SVImageSlideItem
         let imageItem = datasource[indexPath]
         item.representedObject = imageItem
         item.delegate = self
@@ -103,21 +103,21 @@ extension SVPreviewWindowController : SVCollectionViewDelegate {
     
     // MARK: Drag&Drop from the outside of the app
     
-    func collectionView(collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<NSIndexPath?>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionViewDropOperation>) -> NSDragOperation {
-        return .Copy
+    func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<IndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionViewDropOperation>) -> NSDragOperation {
+        return .copy
     }
     
-    func collectionView(collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: NSIndexPath, dropOperation: NSCollectionViewDropOperation) -> Bool {
+    func collectionView(_ collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: IndexPath, dropOperation: NSCollectionViewDropOperation) -> Bool {
         return true
     }
     
-    func collectionView(collectionView: NSCollectionView, didDropURLs URLs: [NSURL], atIndexPath indexPath: NSIndexPath) {
+    func collectionView(_ collectionView: NSCollectionView, didDropURLs URLs: [URL], atIndexPath indexPath: IndexPath) {
         datasource.insertImageURLs(URLs, atIndex: indexPath.item)
     }
 }
 
 extension SVPreviewWindowController : NSCollectionViewDelegateFlowLayout {
-    func collectionView(collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> NSSize {
+    func collectionView(_ collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> NSSize {
         let item = datasource[indexPath]
         var sectionInsets = NSEdgeInsetsZero
         if let flowLayout = collectionView.collectionViewLayout as? NSCollectionViewFlowLayout {
@@ -129,7 +129,7 @@ extension SVPreviewWindowController : NSCollectionViewDelegateFlowLayout {
 }
 
 extension SVPreviewWindowController : SVImageSlideItemDelegate {
-    func imageSlideItemDeleteClicked(item: SVImageSlideItem) {
+    func imageSlideItemDeleteClicked(_ item: SVImageSlideItem) {
         deleteSelectedImages()
     }
     

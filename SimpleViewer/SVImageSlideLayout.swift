@@ -10,18 +10,18 @@ import AppKit
 
 class SVImageSlideLayout: NSCollectionViewFlowLayout {
     
-    var oldSize = CGSizeZero
+    var oldSize = CGSize.zero
     
     override var collectionViewContentSize: NSSize {
         let size = NSSizeToCGSize(super.collectionViewContentSize)
-        if !CGSizeEqualToSize(oldSize, CGSizeZero) && !CGSizeEqualToSize(oldSize, size) {
+        if !oldSize.equalTo(CGSize.zero) && !oldSize.equalTo(size) {
             invalidateLayout()
         }
         oldSize = size
         return NSSizeFromCGSize(size)
     }
     
-    override func shouldInvalidateLayoutForBoundsChange(newBounds: NSRect) -> Bool {
+    override func shouldInvalidateLayout(forBoundsChange newBounds: NSRect) -> Bool {
         return true
     }
 }

@@ -9,21 +9,25 @@
 import Cocoa
 
 protocol SVCollectionViewDelegate : NSCollectionViewDelegate {
-    func collectionView(collectionView: NSCollectionView, didDropURLs URLs: [NSURL], atIndexPath indexPath: NSIndexPath)
+    func collectionView(_ collectionView: NSCollectionView, didDropURLs URLs: [URL], atIndexPath indexPath: IndexPath)
 }
 
 class SVCollectionView: NSCollectionView {
     
-    private var dragInsertionIndexPath: NSIndexPath?
-    private var draggingCursorIsInWindow = false {
+    private var dragInsertionIndexPath: IndexPath?
+    private var isDragValid = false { // when a dragging session cursor is inside the view and has valid items
         didSet {
-            if !draggingCursorIsInWindow {
+            if !isDragValid {
                 dragInsertionIndexPath = nil
                 needsDisplay = true
             }
         }
     }
     
+    private var imageFilterOptions: [String : Any] {
+        return [NSPasteboardURLReadingContentsConformToTypesKey : NSImage.imageTypes()]
+    }
+
     private var itemSpacing : CGFloat {
         var spacing = CGFloat(0)
         if let flowLayout = collectionViewLayout as? NSCollectionViewFlowLayout {
@@ -40,65 +44,73 @@ class SVCollectionView: NSCollectionView {
         return offset
     }
     
-    override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
-        draggingCursorIsInWindow = true
-        return super.draggingEntered(sender)
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        isDragValid = doesPasteboardHaveImages(sender)
+        let operation = isDragValid ? .copy : NSDragOperation()
+        return operation
     }
     
-    override func draggingExited(sender: NSDraggingInfo?) {
-        draggingCursorIsInWindow = false
-        super.draggingEnded(sender)
-    }
-    
-    override func draggingUpdated(sender: NSDraggingInfo) -> NSDragOperation {
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
         let indexPath = actualInsertionIndexPathFromPath(sender)
-        if dragInsertionIndexPath == nil || dragInsertionIndexPath!.item != indexPath.item {
+        let dragInsertionChanged = dragInsertionIndexPath == nil || dragInsertionIndexPath!.item != indexPath.item
+        if dragInsertionChanged && isDragValid {
             // means that index path of insertion is just updated
             dragInsertionIndexPath = indexPath
             needsDisplay = true
         }
-        return super.draggingUpdated(sender)
+        let operation = isDragValid ? .copy : NSDragOperation()
+        return operation
+    }
+
+    
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        isDragValid = false
     }
     
-    override func draggingEnded(sender: NSDraggingInfo?) {
-        super.draggingEnded(sender)
-        if let info = sender where draggingCursorIsInWindow {
+    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        return doesPasteboardHaveImages(sender)
+    }
+
+    override func performDragOperation(_ info: NSDraggingInfo) -> Bool {
+        isDragValid = false
+        let pasteboard = info.draggingPasteboard()
+        let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: imageFilterOptions)
+        if let d = delegate as? SVCollectionViewDelegate, let theURLs = urls as? [URL], theURLs.count > 0 {
             let actualIP = actualInsertionIndexPathFromPath(info)
-            if shouldBeginDrop(info, atIndexPath: actualIP) {
-                if let d = delegate as? SVCollectionViewDelegate {
-                    let urls = gatherDroppedURLs(sender)
-                    d.collectionView(self, didDropURLs: urls, atIndexPath: actualIP)
-                }
-            }
+            d.collectionView(self, didDropURLs: theURLs, atIndexPath: actualIP)
+            return true
         }
-        draggingCursorIsInWindow = false
+        return false
     }
     
-    override func drawRect(dirtyRect: NSRect) {
-        let context = NSGraphicsContext.currentContext()?.CGContext
-        NSColor(CGColor: layer!.backgroundColor!)?.set()
+    override func draw(_ dirtyRect: NSRect) {
+        let context = NSGraphicsContext.current()?.cgContext
+        if let color = layer?.backgroundColor {
+            NSColor(cgColor: color)?.set()
+        }
+        
         NSRectFill(dirtyRect)
         if var indexPath = dragInsertionIndexPath {
-            func drawSeparator(x: CGFloat) {
-                    CGContextSetLineWidth(context, 3)
+            func drawSeparator(_ x: CGFloat) {
+                    context?.setLineWidth(3)
                     NSColor(red: 150/255, green: 200/255, blue: 55/255, alpha: 1).setStroke()
                     let offset = CGFloat(10)
                     let rect = frame
-                    CGContextMoveToPoint(context, x, rect.minY+offset)
+                    context?.move(to: CGPoint(x: x, y: rect.minY+offset))
                     let mixY = rect.maxY-offset
-                    CGContextAddLineToPoint(context, x, mixY)
-                    CGContextStrokePath(context)
+                    context?.addLine(to: CGPoint(x: x, y: mixY))
+                    context?.strokePath()
             }
             
             var x: CGFloat!
             
-            if indexPath.item < numberOfItemsInSection(0) {
-                if let item = itemAtIndexPath(indexPath) as? SVImageSlideItem {
+            if indexPath.item < numberOfItems(inSection: 0) {
+                if let item = item(at: indexPath) as? SVImageSlideItem {
                     x = item.view.frame.origin.x - itemSpacing/2
                 }
             } else {
-                indexPath = NSIndexPath(forItem: indexPath.item-1, inSection: 0)
-                if let item = itemAtIndexPath(indexPath) as? SVImageSlideItem {
+                indexPath = IndexPath(item: indexPath.item-1, section: 0)
+                if let item = item(at: indexPath) as? SVImageSlideItem {
                     x = item.view.frame.origin.x + item.view.frame.size.width + itemSpacing/2
                 }
             }
@@ -109,30 +121,16 @@ class SVCollectionView: NSCollectionView {
         }
     }
     
-    private func shouldBeginDrop(info: NSDraggingInfo, atIndexPath indexPath: NSIndexPath) -> Bool {
-        let dropOperation: NSCollectionViewDropOperation = indexPathForItemAtPoint(info.draggingLocation()) != nil ? .On : .Before
-        if let shouldBegin = delegate?.collectionView?(self, acceptDrop: info, indexPath: indexPath, dropOperation: dropOperation) {
-            return shouldBegin
-        }
-        return false
+    private func doesPasteboardHaveImages(_ info: NSDraggingInfo) -> Bool {
+        let pasteboard = info.draggingPasteboard()
+        return pasteboard.canReadObject(forClasses: [NSURL.self], options: imageFilterOptions)
     }
-    
-    private func gatherDroppedURLs(draggingInfo: NSDraggingInfo?) -> [NSURL] {
-        // gather all dropped urls
-        var droppedURLs = [NSURL]()
-        draggingInfo?.enumerateDraggingItemsWithOptions(.Concurrent, forView: self, classes: [NSURL.self], searchOptions: [NSPasteboardURLReadingFileURLsOnlyKey : true]) { (item, idx, stop) in
-            if let url = item.item as? NSURL {
-                droppedURLs.append(url)
-            }
-        }
-        return droppedURLs
-    }
-    
-    private func actualInsertionIndexPathFromPath(info: NSDraggingInfo) -> NSIndexPath {
+
+    private func actualInsertionIndexPathFromPath(_ info: NSDraggingInfo) -> IndexPath {
         var indexToInsertItemAt: Int?
         // calculate insertion point, items can be inserted before or after an item on which drop occurs, depending on where the cursor hovered: first half of the item - before; second half of the item - after
         let location = info.draggingLocation()
-        let indexPath = indexPathForItemAtPoint(location)
+        let indexPath = indexPathForItem(at: location)
         if let ip = indexPath {
             let visibleIP = indexPathsForVisibleItems()
             if visibleIP.contains(ip) {
@@ -140,8 +138,8 @@ class SVCollectionView: NSCollectionView {
                 // we should also consider scroll content offset to make decent calculations
                 //TODO: this works incorrectly if scrollOffset > 0
                 dropPoint.x += scrollOffset
-                if let item = itemAtIndexPath(ip) {
-                    let dropPointInItem = convertPoint(dropPoint, toView: item.view)
+                if let item = item(at: ip) {
+                    let dropPointInItem = convert(dropPoint, to: item.view)
                     let dropX = dropPointInItem.x
                     let halfOfItemWidth = item.view.bounds.size.width / 2
                     if dropX < halfOfItemWidth {
@@ -155,13 +153,13 @@ class SVCollectionView: NSCollectionView {
             let itemSpace = itemSpacing
             let possibleRightItemLocation = NSPoint(x: location.x+itemSpace, y: location.y)
             // if there is an item on the right we can select it as target index path otherwise it's the end of collection
-            if let possibleRightItemIndexPath = indexPathForItemAtPoint(possibleRightItemLocation) {
+            if let possibleRightItemIndexPath = indexPathForItem(at: possibleRightItemLocation) {
                 indexToInsertItemAt = possibleRightItemIndexPath.item
             }
         }
         if indexToInsertItemAt == nil {
-            indexToInsertItemAt = numberOfItemsInSection(0)
+            indexToInsertItemAt = numberOfItems(inSection: 0)
         }
-        return NSIndexPath(forItem: indexToInsertItemAt!, inSection: 0)
+        return IndexPath(item: indexToInsertItemAt!, section: 0)
     }
 }

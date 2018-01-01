@@ -12,7 +12,7 @@ class SVColoredView: SVLayeredView {
     
     @IBInspectable var color: NSColor? {
         didSet {
-            layer?.backgroundColor = color?.CGColor
+            layer?.backgroundColor = color?.cgColor
         }
     }
 }

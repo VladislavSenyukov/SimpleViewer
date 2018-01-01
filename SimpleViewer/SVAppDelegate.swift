@@ -15,27 +15,27 @@ class SVAppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow? { return previewWC.window }
     var choosing = false
     
-    func applicationDidFinishLaunching(aNotification: NSNotification) {
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
         chooseFiles()
     }
 
-    func applicationShouldHandleReopen(sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
             chooseFiles()
         }
         return false
     }
     
-    @IBAction func openFiles(sender: AnyObject) {
+    @IBAction func openFiles(_ sender: AnyObject) {
         chooseFiles()
     }
 
-    @IBAction func clearFiles(sender: AnyObject) {
+    @IBAction func clearFiles(_ sender: AnyObject) {
         previewWC.clearImages()
     }
     
     func chooseFiles() {
-        if !previewWC.window!.visible {
+        if !previewWC.window!.isVisible {
             previewWC.showWindow(self)
         }
         if !choosing {
@@ -47,7 +47,7 @@ class SVAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
-    func didSelectFiles(urls: [NSURL]) {
+    func didSelectFiles(_ urls: [URL]) {
         previewWC.appendImageFiles(urls)
     }
 }

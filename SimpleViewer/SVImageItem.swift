@@ -10,30 +10,30 @@ import Cocoa
 
 class SVImageItem: NSObject {
     
-    private let url: NSURL
+    fileprivate let url: URL
     static let imageKey = "imageLoaded"
     var cachedSize = NSZeroSize
-    var imageRef: CGImageRef?
+    var imageRef: CGImage?
     dynamic var imageLoaded = false
     
-    init(url: NSURL) {
+    init(url: URL) {
         self.url = url
         self.cachedSize = url.imageSize()
         super.init()
         loadImageFile()
     }
     
-    func fittingSizeForCollectionSize(collectionSize: CGSize, collectionInsets: NSEdgeInsets) -> NSSize {
+    func fittingSizeForCollectionSize(_ collectionSize: CGSize, collectionInsets: EdgeInsets) -> NSSize {
         let availableHeight = collectionSize.height - collectionInsets.top - collectionInsets.bottom
         let size = cachedSize.fittingSizeForHeight(availableHeight)
         return size
     }
     
     func loadImageFile() {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-            if let image = NSImage(contentsOfURL: self.url) {
+        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default).async {
+            if let image = NSImage(contentsOf: self.url) {
                 let imageRef = image.cgImage
-                dispatch_async(dispatch_get_main_queue(), {
+                DispatchQueue.main.async(execute: {
                     self.imageRef = imageRef
                     self.imageLoaded = true
                 })

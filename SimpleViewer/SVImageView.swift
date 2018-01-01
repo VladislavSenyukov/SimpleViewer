@@ -10,7 +10,7 @@ import Cocoa
 
 class SVImageView: SVLayeredView {
     
-    var cgImage: CGImageRef? {
+    var cgImage: CGImage? {
         didSet {
             layer?.contents = cgImage
         }

@@ -12,30 +12,30 @@ class SVImageDatasource: NSObject {
 
     let itemsKey = "items"
     
-    private dynamic var items = NSMutableArray()
-    private var _items: NSMutableArray { return mutableArrayValueForKey(itemsKey) }
+    fileprivate dynamic var items = NSMutableArray()
+    fileprivate var _items: NSMutableArray { return mutableArrayValue(forKey: itemsKey) }
     
     var count: Int { return items.count }
     
-    subscript(idxPath: NSIndexPath) -> SVImageItem {
+    subscript(idxPath: IndexPath) -> SVImageItem {
         return items[idxPath.item] as! SVImageItem
     }
     
-    func appendImageURLs(urls: [NSURL]) {
+    func appendImageURLs(_ urls: [URL]) {
         let imageURLs = SVFilterImageUrls(urls)
         let newItems = imageURLs.map{SVImageItem(url: $0)}
         let items = _items
         for imageItem in newItems {
-            items.insertObject(imageItem, atIndex: items.count)
+            items.insert(imageItem, at: items.count)
         }
     }
     
-    func insertImageURLs(urls: [NSURL], atIndex idx: Int) {
+    func insertImageURLs(_ urls: [URL], atIndex idx: Int) {
         let imageURLs = SVFilterImageUrls(urls)
         let newItems = imageURLs.map{SVImageItem(url: $0)}
         let items = _items
-        for imageItem in newItems.reverse() {
-            items.insertObject(imageItem, atIndex: idx)
+        for imageItem in newItems.reversed() {
+            items.insert(imageItem, at: idx)
         }
     }
     
@@ -43,11 +43,11 @@ class SVImageDatasource: NSObject {
         _items.removeAllObjects()
     }
     
-    func removeItems(indexPaths: Set<NSIndexPath>) {
+    func removeItems(_ indexPaths: Set<IndexPath>) {
         let set = NSMutableIndexSet()
         for path in indexPaths {
-            set.addIndex(path.item)
+            set.add(path.item)
         }
-        _items.removeObjectsAtIndexes(set)
+        _items.removeObjects(at: set as IndexSet)
     }
 }

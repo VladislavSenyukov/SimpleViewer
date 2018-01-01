@@ -8,10 +8,10 @@
 
 import Cocoa
 
-typealias SVChooseFilesCompletion = (urls: [NSURL]) -> ()
+typealias SVChooseFilesCompletion = (_ urls: [URL]) -> ()
 
 class SVOpenPanel {
-    static func chooseFiles(completion: SVChooseFilesCompletion) {
+    static func chooseFiles(_ completion: @escaping SVChooseFilesCompletion) {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = true
@@ -19,14 +19,14 @@ class SVOpenPanel {
         panel.allowedFileTypes = [kUTTypeImage as String]
         panel.message = "Choose images or a directory to open"
         panel.prompt = "Choose"
-        let desktopDirectory = NSSearchPathForDirectoriesInDomains(.DesktopDirectory, .UserDomainMask, true).first!
-        panel.directoryURL = NSURL(string: desktopDirectory)
+        let desktopDirectory = NSSearchPathForDirectoriesInDomains(.desktopDirectory, .userDomainMask, true).first!
+        panel.directoryURL = URL(string: desktopDirectory)
         
-        panel.beginWithCompletionHandler {[unowned panel] (succes) in
+        panel.begin {[unowned panel] (succes) in
             if succes == 1 {
-                completion(urls: panel.URLs)
+                completion(panel.urls)
             } else {
-                completion(urls: [])
+                completion([])
             }
         }
     }

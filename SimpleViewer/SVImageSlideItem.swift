@@ -9,19 +9,19 @@
 import Cocoa
 
 protocol SVImageSlideItemDelegate: class {
-    func imageSlideItemDeleteClicked(item: SVImageSlideItem)
+    func imageSlideItemDeleteClicked(_ item: SVImageSlideItem)
 }
 
 class SVImageSlideItem: NSCollectionViewItem {
 
-    @IBOutlet private weak var cellView: SVImageCollectionCell!
-    private var item: SVImageItem? { return representedObject as? SVImageItem}
-    private var observing = false
+    @IBOutlet fileprivate weak var cellView: SVImageCollectionCell!
+    fileprivate var item: SVImageItem? { return representedObject as? SVImageItem}
+    fileprivate var observing = false
     weak var delegate: SVImageSlideItemDelegate?
     
-    override var selected: Bool {
+    override var isSelected: Bool {
         didSet {
-            if selected {
+            if isSelected {
                 if let firstResponder = collectionView.window?.firstResponder {
                     if !(firstResponder is SVImageSlideItem) {
                         // any item can become first responder to handle keyboard events
@@ -29,14 +29,14 @@ class SVImageSlideItem: NSCollectionViewItem {
                     }
                 }
             }
-            super.selected = selected
-            cellView.selected = selected
+            super.isSelected = isSelected
+            cellView.selected = isSelected
         }
     }
     
     func addImageItemObserver() {
         if !observing {
-            item?.addObserver(self, forKeyPath: SVImageItem.imageKey, options: .New, context: nil)
+            item?.addObserver(self, forKeyPath: SVImageItem.imageKey, options: .new, context: nil)
             observing = !observing
         }
     }
@@ -57,13 +57,13 @@ class SVImageSlideItem: NSCollectionViewItem {
         super.prepareForReuse()
     }
     
-    override var representedObject: AnyObject? {
+    override var representedObject: Any? {
         willSet {
             removeImageItemObserver()
         }
         didSet {
             if let item = representedObject as? SVImageItem {
-                cellView.selected = selected
+                cellView.selected = isSelected
                 if let imageRef = item.imageRef {
                     cellView.picture.cgImage = imageRef
                 } else {
@@ -73,7 +73,7 @@ class SVImageSlideItem: NSCollectionViewItem {
         }
     }
     
-    @IBAction func deleteClicked(sender: AnyObject) {
+    @IBAction func deleteClicked(_ sender: AnyObject) {
         delegate?.imageSlideItemDeleteClicked(self)
     }
 
@@ -81,17 +81,17 @@ class SVImageSlideItem: NSCollectionViewItem {
         return true
     }
     
-    override func keyUp(theEvent: NSEvent) {
+    override func keyUp(with theEvent: NSEvent) {
         if theEvent.keyCode == 51 {
             delegate?.imageSlideItemDeleteClicked(self)
         }
     }
     
-    override func keyDown(theEvent: NSEvent) {
+    override func keyDown(with theEvent: NSEvent) {
         // to suppress the beep sound
     }
     
-    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == SVImageItem.imageKey {
             if let i = item {
                 if i.imageLoaded {

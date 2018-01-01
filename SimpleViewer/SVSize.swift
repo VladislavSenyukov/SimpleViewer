@@ -10,7 +10,7 @@ import Foundation
 
 extension NSSize {
     
-    func fittingSizeForHeight(height: CGFloat) -> NSSize {
+    func fittingSizeForHeight(_ height: CGFloat) -> NSSize {
         let ratio = height / self.height
         let size = NSSize(width: self.width * ratio, height: height)
         return size
