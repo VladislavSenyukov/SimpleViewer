@@ -88,6 +88,13 @@ extension URL {
                 if let h = dic.value(forKey: kCGImagePropertyPixelHeight as String) as? CGFloat {
                     height = h
                 }
+                if let orientation = dic.value(forKey: kCGImagePropertyOrientation as String) as? Int {
+                    if orientation > 4 { // need to swap dimensions
+                        let tempHeight = height
+                        height = width
+                        width = tempHeight
+                    }
+                }
             }
         }
         return NSSize(width: width, height: height)
