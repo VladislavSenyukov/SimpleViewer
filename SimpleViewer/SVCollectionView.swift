@@ -73,11 +73,10 @@ class SVCollectionView: NSCollectionView {
 
     override func performDragOperation(_ info: NSDraggingInfo) -> Bool {
         isDragValid = false
-        let pasteboard = info.draggingPasteboard()
-        let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: imageFilterOptions)
-        if let d = delegate as? SVCollectionViewDelegate, let theURLs = urls as? [URL], theURLs.count > 0 {
+        let urls = readURLsFromInfo(info)
+        if let d = delegate as? SVCollectionViewDelegate, urls.count > 0 {
             let actualIP = actualInsertionIndexPathFromPath(info)
-            d.collectionView(self, didDropURLs: theURLs, atIndexPath: actualIP)
+            d.collectionView(self, didDropURLs: urls, atIndexPath: actualIP)
             return true
         }
         return false
@@ -120,16 +119,18 @@ class SVCollectionView: NSCollectionView {
         }
     }
     
-    private func doesPasteboardHaveImages(_ info: NSDraggingInfo) -> Bool {
+    private func readURLsFromInfo(_ info: NSDraggingInfo) -> [URL] {
+        var urls = [URL]()
         info.enumerateDraggingItems(options: .concurrent, for: self, classes: [NSURL.self], searchOptions: [NSPasteboardURLReadingFileURLsOnlyKey : true]) { (item, idx, stop) in
-            if let url = item.item as? NSURL {
-                Swift.print(url)
+            if let url = item.item as? URL {
+                urls.append(url)
             }
         }
-
-        
-        let pasteboard = info.draggingPasteboard()
-        return pasteboard.canReadObject(forClasses: [NSURL.self], options: imageFilterOptions)
+        return urls
+    }
+    
+    private func doesPasteboardHaveImages(_ info: NSDraggingInfo) -> Bool {
+        return SVFindImageURL(readURLsFromInfo(info))
     }
 
     private func actualInsertionIndexPathFromPath(_ info: NSDraggingInfo) -> IndexPath {
