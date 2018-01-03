@@ -20,7 +20,7 @@ class SVOpenPanel {
         panel.message = "Choose images or a directory to open"
         panel.prompt = "Choose"
         panel.begin {[unowned panel] (succes) in
-            if succes == 1 {
+            if succes.rawValue == 1 {
                 completion(panel.urls)
             } else {
                 completion([])

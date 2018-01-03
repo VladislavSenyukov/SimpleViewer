@@ -25,14 +25,18 @@ class SVPreviewWindowController: NSWindowController {
     fileprivate lazy var datasource = SVImageDatasource()
     
     convenience init() {
-        self.init(windowNibName: "MainWindow")
+        self.init(windowNibName: NSNib.Name(rawValue: "MainWindow"))
     }
     
     override func windowDidLoad() {
         super.windowDidLoad()
         datasource.addObserver(self, forKeyPath: datasource.itemsKey, options: .new, context: nil)
-        collectionView.register(NSNib(nibNamed: SVImageCollectionCell.nibName, bundle: nil), forItemWithIdentifier: SVImageCollectionCell.nibName)
-        collectionView.register(forDraggedTypes: [NSURLPboardType])
+        let nibName = NSNib.Name(rawValue: SVImageCollectionCell.nibName)
+        let nib = NSNib(nibNamed: nibName, bundle: nil)
+        let identifier = NSUserInterfaceItemIdentifier(SVImageCollectionCell.nibName)
+        collectionView.register(nib, forItemWithIdentifier: identifier)
+        let type = NSPasteboard.PasteboardType(kUTTypeURL as String)
+        collectionView.registerForDraggedTypes([type])
         collectionView.wantsLayer = true
         collectionView.layer?.backgroundColor = .white
     }
@@ -74,12 +78,12 @@ class SVPreviewWindowController: NSWindowController {
 
 extension SVPreviewWindowController : SVCollectionViewUpdatable {
     func updateCollectionViewInsertion(_ indexPaths: Set<IndexPath>) {
-        NSAnimationContext.current().duration = 0.25
+        NSAnimationContext.current.duration = 0.25
         collectionView.animator().insertItems(at: indexPaths)
     }
     
     func updateCollectionViewRemoval(_ indexPaths: Set<IndexPath>) {
-        NSAnimationContext.current().duration = 0.25
+        NSAnimationContext.current.duration = 0.25
         collectionView.animator().deleteItems(at: indexPaths)
     }
 }
@@ -92,7 +96,7 @@ extension SVPreviewWindowController : NSCollectionViewDataSource {
         return datasource.count
     }
     func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
-        let item = collectionView.makeItem(withIdentifier: SVImageCollectionCell.nibName, for: indexPath) as! SVImageSlideItem
+        let item = collectionView.makeItem(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: SVImageCollectionCell.nibName), for: indexPath) as! SVImageSlideItem
         let imageItem = datasource[indexPath]
         item.representedObject = imageItem
         item.delegate = self
@@ -104,11 +108,11 @@ extension SVPreviewWindowController : SVCollectionViewDelegate {
     
     // MARK: Drag&Drop from the outside of the app
     
-    private func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<IndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionViewDropOperation>) -> NSDragOperation {
+    private func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<IndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionView.DropOperation>) -> NSDragOperation {
         return .copy
     }
     
-    func collectionView(_ collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: IndexPath, dropOperation: NSCollectionViewDropOperation) -> Bool {
+    func collectionView(_ collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: IndexPath, dropOperation: NSCollectionView.DropOperation) -> Bool {
         return true
     }
     

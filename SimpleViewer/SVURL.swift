@@ -10,9 +10,8 @@ import Foundation
 
 func SVFilterImageUrls(_ urls: [URL]) -> [URL] {
     var images = [URL]()
-    var stop = false
     let limit = 100
-    enumerateURLsRecursively(urls, stop: &stop) { (_ url: URL) in
+    enumerateURLsRecursively(urls) { (_ url: URL, _ stop: inout Bool) in
         if (images.count >= limit) {
             stop = true
         } else if url.representsImage {
@@ -24,28 +23,31 @@ func SVFilterImageUrls(_ urls: [URL]) -> [URL] {
 
 func SVFindImageURL(_ urls: [URL]) -> Bool {
     var imageFound = false
-    enumerateURLsRecursively(urls, stop: &imageFound) { (_ url: URL) in
+    enumerateURLsRecursively(urls) { (_ url: URL, _ stop: inout Bool) in
         if url.representsImage {
+            stop = true
             imageFound = true
         }
     }
     return imageFound
 }
 
-fileprivate func enumerateURLsRecursively(_ urls: [URL], stop: inout Bool, enumeratorBlock: (_ url: URL) -> ()) {
+fileprivate func enumerateURLsRecursively(_ urls: [URL], enumeratorBlock: (_ url: URL, _ stop: inout Bool) -> ()) {
+    var stop = false
     for url in urls {
         if (stop) {
             return
         }
         if url.hasDirectoryPath {
             if let urlsInDirectory = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: [URLResourceKey.isRegularFileKey, URLResourceKey.isDirectoryKey], options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
-                enumerateURLsRecursively(urlsInDirectory, stop: &stop, enumeratorBlock: enumeratorBlock)
+                enumerateURLsRecursively(urlsInDirectory) { (_ url: URL, _ stop: inout Bool) in
+                    enumeratorBlock(url, &stop)
+                }
             }
         } else {
-            enumeratorBlock(url)
+            enumeratorBlock(url, &stop)
         }
     }
-    return
 }
 
 extension URL {

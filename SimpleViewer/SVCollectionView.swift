@@ -25,7 +25,7 @@ class SVCollectionView: NSCollectionView {
     }
     
     private var imageFilterOptions: [String : Any] {
-        return [NSPasteboardURLReadingContentsConformToTypesKey : NSImage.imageTypes()]
+        return [NSPasteboard.ReadingOptionKey.urlReadingContentsConformToTypes.rawValue : NSImage.imageTypes]
     }
 
     private var itemSpacing : CGFloat {
@@ -83,11 +83,11 @@ class SVCollectionView: NSCollectionView {
     }
     
     override func draw(_ dirtyRect: NSRect) {
-        let context = NSGraphicsContext.current()?.cgContext
+        let context = NSGraphicsContext.current?.cgContext
         if let color = layer?.backgroundColor {
             NSColor(cgColor: color)?.set()
         }
-        NSRectFill(dirtyRect)
+        dirtyRect.fill()
         if var indexPath = dragInsertionIndexPath {
             func drawSeparator(_ x: CGFloat) {
                     context?.setLineWidth(3)
@@ -121,7 +121,7 @@ class SVCollectionView: NSCollectionView {
     
     private func readURLsFromInfo(_ info: NSDraggingInfo) -> [URL] {
         var urls = [URL]()
-        info.enumerateDraggingItems(options: .concurrent, for: self, classes: [NSURL.self], searchOptions: [NSPasteboardURLReadingFileURLsOnlyKey : true]) { (item, idx, stop) in
+        info.enumerateDraggingItems(options: .concurrent, for: self, classes: [NSURL.self], searchOptions: [NSPasteboard.ReadingOptionKey.urlReadingFileURLsOnly : true]) { (item, idx, stop) in
             if let url = item.item as? URL {
                 urls.append(url)
             }

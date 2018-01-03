@@ -12,7 +12,7 @@ class SVImageDatasource: NSObject {
 
     let itemsKey = "items"
     
-    fileprivate dynamic var items = NSMutableArray()
+    @objc fileprivate dynamic var items = NSMutableArray()
     fileprivate var _items: NSMutableArray { return mutableArrayValue(forKey: itemsKey) }
     
     var count: Int { return items.count }

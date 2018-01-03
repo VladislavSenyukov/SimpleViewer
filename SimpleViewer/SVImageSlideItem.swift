@@ -22,10 +22,10 @@ class SVImageSlideItem: NSCollectionViewItem {
     override var isSelected: Bool {
         didSet {
             if isSelected {
-                if let firstResponder = collectionView.window?.firstResponder {
+                if let firstResponder = collectionView?.window?.firstResponder {
                     if !(firstResponder is SVImageSlideItem) {
                         // any item can become first responder to handle keyboard events
-                        collectionView.window?.makeFirstResponder(self)
+                        collectionView?.window?.makeFirstResponder(self)
                     }
                 }
             }

@@ -14,7 +14,7 @@ class SVImageItem: NSObject {
     static let imageKey = "imageLoaded"
     var cachedSize = NSZeroSize
     var imageRef: CGImage?
-    dynamic var imageLoaded = false
+    @objc dynamic var imageLoaded = false
     
     init(url: URL) {
         self.url = url
@@ -23,7 +23,7 @@ class SVImageItem: NSObject {
         loadImageFile()
     }
     
-    func fittingSizeForCollectionSize(_ collectionSize: CGSize, collectionInsets: EdgeInsets) -> NSSize {
+    func fittingSizeForCollectionSize(_ collectionSize: CGSize, collectionInsets: NSEdgeInsets) -> NSSize {
         let availableHeight = collectionSize.height - collectionInsets.top - collectionInsets.bottom
         let size = cachedSize.fittingSizeForHeight(availableHeight)
         return size
